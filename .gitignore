@@ -5,6 +5,9 @@
 *.dylib
 bin/
 
+# generated protobuf bindings
+*.pb.go
+
 # Test binary, build with `go test -c`
 *.test
 

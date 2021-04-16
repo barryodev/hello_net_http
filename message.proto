@@ -1,0 +1,13 @@
+syntax = "proto3";
+package main;
+
+option go_package = "github.com/barryodev/hello_net_http/main";
+
+// protoc command to generate bindings
+// protoc --go_out=paths=source_relative:. -I. message.proto
+
+message Pixel {
+  int32 x = 1;
+  int32 y = 2;
+  string colour = 3;
+}

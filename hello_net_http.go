@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
+	"github.com/golang/protobuf/proto"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -11,6 +13,20 @@ import (
 func root(w http.ResponseWriter, r *http.Request){
 	fmt.Fprintf(w, "Ping!")
 	fmt.Println("Received Request")
+
+	pixel := Pixel{}
+
+	data, err := ioutil.ReadAll(r.Body)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	if err := proto.Unmarshal(data, &pixel); err != nil {
+		fmt.Println(err)
+	}
+
+	println("{", pixel.GetX(), ",", pixel.GetY(), ":", pixel.GetColour(), "}")
 }
 
 func listenForRequests() {
@@ -18,10 +34,18 @@ func listenForRequests() {
 	log.Fatal(http.ListenAndServe(":1337", nil))
 }
 
-func sendRequest() {
-	resp, err := http.Get("http://localhost:1337")
+func sendRequest(pixel Pixel) {
+	data, err := proto.Marshal(&pixel)
 	if err != nil {
-		log.Fatalln(err)
+		fmt.Println(err)
+		return
+	}
+
+	resp, err := http.Post("http://localhost:1337", "", bytes.NewBuffer(data))
+
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
 	fmt.Println(resp.Status)
 
@@ -39,6 +63,13 @@ func main() {
 
 	sendFlag := flag.Bool("send", false, "send a request to http://localhost:1337")
 
+	xFlag := flag.Int("x", 0, "X coordinate")
+
+	yFlag := flag.Int("y", 0, "Y coordinate")
+
+	colourFlag := flag.String("colour", "FFFFFF", "Colour hex code")
+
+
 	flag.Parse()
 
 	if *listenFlag {
@@ -48,6 +79,8 @@ func main() {
 
 	if *sendFlag {
 		fmt.Println("Sending...")
-		sendRequest()
+
+		pixel := Pixel{X: int32(*xFlag), Y: int32(*yFlag), Colour: *colourFlag}
+		sendRequest(pixel)
 	}
 }
